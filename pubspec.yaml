@@ -1,15 +1,21 @@
-name: tradelens_academy
-description: Educational trading journal app connected to Firebase Realtime Database.
-publish_to: 'none'
+name: tradelens_app
+description: TradeLens Academy - Trading Journal App
+publish_to: "none"
+
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.2
+
+  http: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true
