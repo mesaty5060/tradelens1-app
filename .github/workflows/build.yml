@@ -1,8 +1,11 @@
-
-name: Build APK
+name: Build Android APK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
 
 jobs:
   build:
@@ -12,44 +15,43 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show files
+      - name: Show files and find Flutter project
         run: |
-          echo "===== ROOT FILES ====="
           ls -la
-          echo "===== SEARCH pubspec.yaml ====="
           find . -name pubspec.yaml
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: '3.22.3'
+          channel: stable
+          cache: true
 
-      - name: Find project path
-        id: find_project
+      - name: Find Flutter project
         run: |
-          PROJECT_PATH=$(dirname $(find . -name pubspec.yaml | head -n 1))
+          PROJECT_PATH=$(dirname "$(find . -name pubspec.yaml | head -n 1)")
           echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
-          echo "Project found at: $PROJECT_PATH"
+          echo "Flutter project path: $PROJECT_PATH"
 
-      - name: Install dependencies
+      - name: Get Flutter packages
         run: flutter pub get
         working-directory: ${{ env.PROJECT_PATH }}
 
-      - name: Build APK
+      - name: Build release APK
         run: flutter build apk --release --dart-define=FIREBASE_DATABASE_URL=https://tradelens-academy-default-rtdb.firebaseio.com
         working-directory: ${{ env.PROJECT_PATH }}
 
-      - name: Upload APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
+          name: TradeLens-Academy-APK
           path: ${{ env.PROJECT_PATH }}/build/app/outputs/flutter-apk/app-release.apk
