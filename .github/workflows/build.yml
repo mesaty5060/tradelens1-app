@@ -1,3 +1,4 @@
+
 name: Build APK
 
 on:
@@ -7,23 +8,48 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show files
+        run: |
+          echo "===== ROOT FILES ====="
+          ls -la
+          echo "===== SEARCH pubspec.yaml ====="
+          find . -name pubspec.yaml
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
 
-      - run: flutter pub get
+      - name: Find project path
+        id: find_project
+        run: |
+          PROJECT_PATH=$(dirname $(find . -name pubspec.yaml | head -n 1))
+          echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
+          echo "Project found at: $PROJECT_PATH"
 
-      - run: flutter build apk --release --dart-define=FIREBASE_DATABASE_URL=https://tradelens-academy-default-rtdb.firebaseio.com
+      - name: Install dependencies
+        run: flutter pub get
+        working-directory: ${{ env.PROJECT_PATH }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Build APK
+        run: flutter build apk --release --dart-define=FIREBASE_DATABASE_URL=https://tradelens-academy-default-rtdb.firebaseio.com
+        working-directory: ${{ env.PROJECT_PATH }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: ${{ env.PROJECT_PATH }}/build/app/outputs/flutter-apk/app-release.apk
